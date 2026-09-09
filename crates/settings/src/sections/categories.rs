@@ -2,16 +2,13 @@
 
 use fluxdown_ui_components::{ButtonVariant, button};
 use fluxdown_ui_i18n::Translator;
-use fluxdown_ui_theme::active_theme;
+use fluxdown_ui_theme::{CONTROL_HEIGHT, active_theme};
 use gpui::{App, Context, IntoElement as _, ParentElement, SharedString, Styled, div, px};
-use gpui_component::{
-    Icon, h_flex,
-    setting::{SettingGroup, SettingItem},
-    v_flex,
-};
+use gpui_component::{Icon, h_flex, v_flex};
 
 use super::{SectionContext, category_dialog};
 use crate::store::SettingsStore;
+use crate::ui::{SettingsRow, SettingsSection};
 
 pub(crate) use fluxdown_protocol::CUSTOM_CATEGORIES_PREF_KEY as CATEGORIES_KEY;
 /// 分类模型：wire 形状归 protocol，设置页只读写偏好。
@@ -57,14 +54,14 @@ pub(crate) fn display_name(translator: &Translator, entry: &CategoryEntry) -> Sh
     }
 }
 
-pub(crate) fn group(ctx: &SectionContext, _cx: &mut App) -> SettingGroup {
-    SettingGroup::new()
+pub(crate) fn group(ctx: &SectionContext, _cx: &mut App) -> SettingsSection {
+    SettingsSection::new()
         .title(ctx.t("customCategories"))
-        .description(ctx.t("categoryPriorityNote"))
-        .item(list_item(ctx))
+        .subtitle(ctx.t("categoryPriorityNote"))
+        .row(list_item(ctx))
 }
 
-fn list_item(ctx: &SectionContext) -> SettingItem {
+fn list_item(ctx: &SectionContext) -> SettingsRow {
     let store = ctx.store();
     let translator = ctx.translator.clone();
     let builtin = ctx.t("builtinCategory");
@@ -77,201 +74,209 @@ fn list_item(ctx: &SectionContext) -> SettingItem {
     let reset = ctx.t("resetBuiltinCategories");
     let auto_dirs = ctx.t("autoCategoryDirs");
     let regex_label = ctx.t("regexLabel");
-    SettingItem::render(move |options, _, cx: &mut App| {
-        let tokens = active_theme(cx).tokens();
-        let disabled = options.is_disabled();
-        let list = read_categories(store.read(cx));
-        let count = list.len();
-        let mut column = v_flex().w_full().gap(tokens.spacing.xs);
-        for (index, entry) in list.iter().enumerate() {
-            let name = display_name(&translator, entry);
-            let details = if entry.match_mode == "regex" {
-                format!("{regex_label}: {}", entry.regex_pattern)
-            } else if entry.extensions.is_empty() {
-                String::new()
-            } else {
-                entry
-                    .extensions
-                    .iter()
-                    .map(|ext| format!(".{ext}"))
-                    .collect::<Vec<_>>()
-                    .join(", ")
-            };
-            let save_dir = entry.save_dir.clone();
-            let up_store = store.clone();
-            let down_store = store.clone();
-            let edit_store = store.clone();
-            let edit_translator = translator.clone();
-            let edit_entry = entry.clone();
-            let delete_store = store.clone();
-            let id_up = entry.id.clone();
-            let id_down = entry.id.clone();
-            let id_delete = entry.id.clone();
-            column = column.child(
-                h_flex()
-                    .w_full()
-                    .items_center()
-                    .gap(tokens.spacing.sm)
-                    .px(tokens.spacing.sm)
-                    .py(tokens.spacing.xs)
-                    .rounded(tokens.radius.md)
-                    .border_1()
-                    .border_color(tokens.colors.border)
-                    .child(
-                        Icon::new(category_dialog::icon_for(&entry.icon))
-                            .size(px(16.))
-                            .text_color(tokens.colors.muted_foreground),
-                    )
-                    .child(
-                        v_flex()
-                            .flex_1()
-                            .min_w_0()
-                            .gap(tokens.spacing.xxs)
-                            .child(
-                                h_flex()
-                                    .gap(tokens.spacing.sm)
-                                    .items_center()
-                                    .child(div().text_sm().child(name))
-                                    .child(
-                                        div()
-                                            .px(tokens.spacing.xs)
-                                            .rounded(tokens.radius.sm)
-                                            .bg(tokens.colors.accent)
-                                            .text_color(tokens.colors.accent_foreground)
-                                            .text_xs()
-                                            .child(if entry.is_builtin {
-                                                builtin.clone()
-                                            } else {
-                                                custom.clone()
-                                            }),
-                                    ),
-                            )
-                            .child(
-                                div()
-                                    .truncate()
-                                    .text_xs()
-                                    .text_color(tokens.colors.muted_foreground)
-                                    .child(SharedString::from(details)),
-                            )
-                            .when_some_dir(save_dir, tokens.colors.muted_foreground),
-                    )
-                    .child(
-                        button(
-                            SharedString::from(format!("category-up-{}", entry.id)),
-                            move_up.clone(),
-                            ButtonVariant::Ghost,
-                            cx,
+    SettingsRow::custom(
+        move |disabled: bool, _key: &SharedString, _window: &mut gpui::Window, cx: &mut App| {
+            let tokens = active_theme(cx).tokens();
+            let list = read_categories(store.read(cx));
+            let count = list.len();
+            let mut column = v_flex().w_full().gap(tokens.spacing.xs);
+            for (index, entry) in list.iter().enumerate() {
+                let name = display_name(&translator, entry);
+                let details = if entry.match_mode == "regex" {
+                    format!("{regex_label}: {}", entry.regex_pattern)
+                } else if entry.extensions.is_empty() {
+                    String::new()
+                } else {
+                    entry
+                        .extensions
+                        .iter()
+                        .map(|ext| format!(".{ext}"))
+                        .collect::<Vec<_>>()
+                        .join(", ")
+                };
+                let save_dir = entry.save_dir.clone();
+                let up_store = store.clone();
+                let down_store = store.clone();
+                let edit_store = store.clone();
+                let edit_translator = translator.clone();
+                let edit_entry = entry.clone();
+                let delete_store = store.clone();
+                let id_up = entry.id.clone();
+                let id_down = entry.id.clone();
+                let id_delete = entry.id.clone();
+                column = column.child(
+                    h_flex()
+                        .w_full()
+                        .items_center()
+                        .gap(tokens.spacing.sm)
+                        .px(tokens.spacing.sm)
+                        .py(tokens.spacing.xs)
+                        .rounded(tokens.radius.md)
+                        .border_1()
+                        .border_color(tokens.colors.border)
+                        .child(
+                            Icon::new(category_dialog::icon_for(&entry.icon))
+                                .size(px(16.))
+                                .text_color(tokens.colors.muted_foreground),
                         )
-                        .disabled(disabled || index == 0)
-                        .on_click(move |_, _, cx| {
-                            let id = id_up.clone();
-                            up_store.update(cx, |store, cx| move_category(store, &id, -1, cx));
-                        }),
-                    )
-                    .child(
-                        button(
-                            SharedString::from(format!("category-down-{}", entry.id)),
-                            move_down.clone(),
-                            ButtonVariant::Ghost,
-                            cx,
+                        .child(
+                            v_flex()
+                                .flex_1()
+                                .min_w_0()
+                                .gap(tokens.spacing.xxs)
+                                .child(
+                                    h_flex()
+                                        .gap(tokens.spacing.sm)
+                                        .items_center()
+                                        .child(div().text_sm().child(name))
+                                        .child(
+                                            div()
+                                                .px(tokens.spacing.xs)
+                                                .rounded(tokens.radius.sm)
+                                                .bg(tokens.colors.accent)
+                                                .text_color(tokens.colors.accent_foreground)
+                                                .text_xs()
+                                                .child(if entry.is_builtin {
+                                                    builtin.clone()
+                                                } else {
+                                                    custom.clone()
+                                                }),
+                                        ),
+                                )
+                                .child(
+                                    div()
+                                        .truncate()
+                                        .text_xs()
+                                        .text_color(tokens.colors.muted_foreground)
+                                        .child(SharedString::from(details)),
+                                )
+                                .when_some_dir(save_dir, tokens.colors.muted_foreground),
                         )
-                        .disabled(disabled || index + 1 == count)
-                        .on_click(move |_, _, cx| {
-                            let id = id_down.clone();
-                            down_store.update(cx, |store, cx| move_category(store, &id, 1, cx));
-                        }),
-                    )
-                    .child(
-                        button(
-                            SharedString::from(format!("category-edit-{}", entry.id)),
-                            edit.clone(),
-                            ButtonVariant::Secondary,
-                            cx,
-                        )
-                        .disabled(disabled)
-                        .on_click(move |_, window, cx| {
-                            category_dialog::open(
-                                edit_store.clone(),
-                                edit_translator.clone(),
-                                Some(edit_entry.clone()),
-                                window,
+                        .child(
+                            button(
+                                SharedString::from(format!("category-up-{}", entry.id)),
+                                move_up.clone(),
+                                ButtonVariant::Ghost,
                                 cx,
-                            );
-                        }),
-                    )
-                    .child(
-                        button(
-                            SharedString::from(format!("category-delete-{}", entry.id)),
-                            delete.clone(),
-                            ButtonVariant::Destructive,
-                            cx,
+                            )
+                            .h(CONTROL_HEIGHT)
+                            .disabled(disabled || index == 0)
+                            .on_click(move |_, _, cx| {
+                                let id = id_up.clone();
+                                up_store.update(cx, |store, cx| move_category(store, &id, -1, cx));
+                            }),
                         )
-                        .disabled(disabled || entry.is_builtin)
-                        .on_click(move |_, _, cx| {
-                            let id = id_delete.clone();
-                            delete_store.update(cx, |store, cx| {
-                                let list = read_categories(store)
-                                    .into_iter()
-                                    .filter(|entry| entry.id != id)
-                                    .collect();
-                                write_categories(store, list, cx);
-                            });
-                        }),
-                    ),
-            );
-        }
-        let reset_store = store.clone();
-        let auto_store = store.clone();
-        let add_store = store.clone();
-        let add_translator = translator.clone();
-        column
-            .child(
-                h_flex()
-                    .w_full()
-                    .justify_end()
-                    .gap(tokens.spacing.sm)
-                    .child(
-                        button("category-add", add.clone(), ButtonVariant::Primary, cx)
+                        .child(
+                            button(
+                                SharedString::from(format!("category-down-{}", entry.id)),
+                                move_down.clone(),
+                                ButtonVariant::Ghost,
+                                cx,
+                            )
+                            .h(CONTROL_HEIGHT)
+                            .disabled(disabled || index + 1 == count)
+                            .on_click(move |_, _, cx| {
+                                let id = id_down.clone();
+                                down_store.update(cx, |store, cx| move_category(store, &id, 1, cx));
+                            }),
+                        )
+                        .child(
+                            button(
+                                SharedString::from(format!("category-edit-{}", entry.id)),
+                                edit.clone(),
+                                ButtonVariant::Secondary,
+                                cx,
+                            )
+                            .h(CONTROL_HEIGHT)
                             .disabled(disabled)
                             .on_click(move |_, window, cx| {
                                 category_dialog::open(
-                                    add_store.clone(),
-                                    add_translator.clone(),
-                                    None,
+                                    edit_store.clone(),
+                                    edit_translator.clone(),
+                                    Some(edit_entry.clone()),
                                     window,
                                     cx,
                                 );
                             }),
-                    )
-                    .child(
-                        button(
-                            "category-auto-dirs",
-                            auto_dirs.clone(),
-                            ButtonVariant::Secondary,
-                            cx,
                         )
-                        .disabled(disabled)
-                        .on_click(move |_, _, cx| {
-                            auto_store.update(cx, apply_auto_dirs);
-                        }),
-                    )
-                    .child(
-                        button(
-                            "category-reset",
-                            reset.clone(),
-                            ButtonVariant::Secondary,
-                            cx,
+                        .child(
+                            button(
+                                SharedString::from(format!("category-delete-{}", entry.id)),
+                                delete.clone(),
+                                ButtonVariant::Destructive,
+                                cx,
+                            )
+                            .h(CONTROL_HEIGHT)
+                            .disabled(disabled || entry.is_builtin)
+                            .on_click(move |_, _, cx| {
+                                let id = id_delete.clone();
+                                delete_store.update(cx, |store, cx| {
+                                    let list = read_categories(store)
+                                        .into_iter()
+                                        .filter(|entry| entry.id != id)
+                                        .collect();
+                                    write_categories(store, list, cx);
+                                });
+                            }),
+                        ),
+                );
+            }
+            let reset_store = store.clone();
+            let auto_store = store.clone();
+            let add_store = store.clone();
+            let add_translator = translator.clone();
+            column
+                .child(
+                    h_flex()
+                        .w_full()
+                        .justify_end()
+                        .gap(tokens.spacing.sm)
+                        .child(
+                            button("category-add", add.clone(), ButtonVariant::Primary, cx)
+                                .h(CONTROL_HEIGHT)
+                                .disabled(disabled)
+                                .on_click(move |_, window, cx| {
+                                    category_dialog::open(
+                                        add_store.clone(),
+                                        add_translator.clone(),
+                                        None,
+                                        window,
+                                        cx,
+                                    );
+                                }),
                         )
-                        .disabled(disabled)
-                        .on_click(move |_, _, cx| {
-                            reset_store.update(cx, |store, cx| {
-                                write_categories(store, CategoryEntry::builtin_defaults(), cx);
-                            });
-                        }),
-                    ),
-            )
-            .into_any_element()
-    })
+                        .child(
+                            button(
+                                "category-auto-dirs",
+                                auto_dirs.clone(),
+                                ButtonVariant::Secondary,
+                                cx,
+                            )
+                            .h(CONTROL_HEIGHT)
+                            .disabled(disabled)
+                            .on_click(move |_, _, cx| {
+                                auto_store.update(cx, apply_auto_dirs);
+                            }),
+                        )
+                        .child(
+                            button(
+                                "category-reset",
+                                reset.clone(),
+                                ButtonVariant::Secondary,
+                                cx,
+                            )
+                            .h(CONTROL_HEIGHT)
+                            .disabled(disabled)
+                            .on_click(move |_, _, cx| {
+                                reset_store.update(cx, |store, cx| {
+                                    write_categories(store, CategoryEntry::builtin_defaults(), cx);
+                                });
+                            }),
+                        ),
+                )
+                .into_any_element()
+        },
+    )
     .keywords([ctx.t("customCategories"), ctx.t("customCategory")])
 }
 

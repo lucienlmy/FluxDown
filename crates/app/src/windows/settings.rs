@@ -50,6 +50,7 @@ pub fn open(cx: &mut App) {
                     account: Some(account.clone().into()),
                     extensions: Some(extensions.clone().into()),
                 },
+                window,
                 cx,
             )
         });

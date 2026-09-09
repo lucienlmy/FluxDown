@@ -6,6 +6,7 @@
 mod port;
 mod sections;
 mod store;
+mod ui;
 mod view;
 
 pub use port::{PortFuture, SettingsPort};
