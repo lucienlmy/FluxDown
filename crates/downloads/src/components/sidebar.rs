@@ -472,16 +472,14 @@ impl DownloadView {
             )
     }
 
+    /// 分区容器：与 Flutter 桌面端一致的扁平分组（无卡片边框），
+    /// 分区之间只靠留白与小标题区分，避免侧栏出现多层套框。
     fn section_card(&self, cx: &Context<Self>) -> Div {
         let tokens = active_theme(cx).tokens().clone();
         v_flex()
-            .mx(tokens.spacing.sm)
-            .mt(tokens.spacing.sm)
             .px(tokens.spacing.xs)
-            .py(tokens.spacing.xs)
-            .border_1()
-            .border_color(tokens.colors.border)
-            .rounded(tokens.radius.md)
+            .pt(tokens.spacing.sm)
+            .pb(tokens.spacing.xxs)
     }
 
     /// 状态区：全部 / 下载中 / 已完成 / 失败 / 暂停 五个文件夹，各自可展开显示分类子项。

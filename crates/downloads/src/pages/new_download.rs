@@ -15,14 +15,14 @@ use crate::{
 };
 use fluxdown_protocol::CreateTaskRequest;
 use fluxdown_ui_i18n::Translator;
-use fluxdown_ui_theme::active_theme;
+use fluxdown_ui_theme::{CONTROL_HEIGHT, active_theme};
 use gpui::{
     Anchor, App, AppContext as _, ClickEvent, Context, Div, Entity, InteractiveElement as _,
     IntoElement, ParentElement, Pixels, Render, SharedString, StatefulInteractiveElement as _,
     Styled, Window, div, prelude::FluentBuilder as _, px,
 };
 use gpui_component::{
-    Disableable as _, Icon, IconName, Sizable as _, WindowExt as _,
+    Disableable as _, Icon, IconName, Sizable as _, Size, WindowExt as _,
     button::{Button, ButtonVariants as _, DropdownButton},
     h_flex,
     input::{Input, InputEvent, InputState, Textarea, TextareaState},
@@ -554,6 +554,8 @@ impl NewDownloadView {
         let on_pick = Rc::new(on_pick);
         Button::new(id)
             .outline()
+            .small()
+            .h(CONTROL_HEIGHT)
             .label(label)
             .dropdown_caret(true)
             .when_some(width, |this, width| this.w(width))
@@ -629,19 +631,13 @@ impl NewDownloadView {
             .child(text)
     }
 
+    /// 窗口标题栏已显示「新建下载」，这里只保留一行说明，避免标题重复。
     fn render_header(&self, cx: &App) -> Div {
         let tokens = active_theme(cx).tokens().clone();
         v_flex()
             .px(tokens.spacing.md)
-            .pt(tokens.spacing.md)
+            .pt(tokens.spacing.sm)
             .pb(tokens.spacing.sm)
-            .gap(tokens.spacing.xxs)
-            .child(
-                div()
-                    .text_size(tokens.typography.md.size)
-                    .font_weight(tokens.typography.md.weight)
-                    .child(self.strings.title.clone()),
-            )
             .child(self.hint(self.strings.subtitle.clone(), cx))
     }
 
@@ -674,6 +670,7 @@ impl NewDownloadView {
                     Button::new("new-download-open-torrent")
                         .ghost()
                         .small()
+                        .h(CONTROL_HEIGHT)
                         .icon(IconName::FolderOpen)
                         .label(self.strings.open_torrent.clone())
                         .disabled(self.picking)
@@ -685,6 +682,7 @@ impl NewDownloadView {
                     Button::new("new-download-import-txt")
                         .ghost()
                         .small()
+                        .h(CONTROL_HEIGHT)
                         .icon(IconName::File)
                         .label(self.strings.import_txt.clone())
                         .disabled(self.picking)
@@ -719,7 +717,11 @@ impl NewDownloadView {
             cx,
         ));
         if self.threads == ThreadChoice::Custom {
-            row = row.child(Input::new(&self.custom_threads).w(px(96.)));
+            row = row.child(
+                Input::new(&self.custom_threads)
+                    .with_size(Size::Medium)
+                    .w(px(96.)),
+            );
         }
         v_flex()
             .gap(tokens.spacing.xs)
@@ -742,11 +744,13 @@ impl NewDownloadView {
                         div()
                             .flex_1()
                             .min_w_0()
-                            .child(Input::new(&self.save_dir).w_full()),
+                            .child(Input::new(&self.save_dir).with_size(Size::Medium).w_full()),
                     )
                     .child(
                         Button::new("new-download-browse")
                             .outline()
+                            .small()
+                            .h(CONTROL_HEIGHT)
                             .label(self.strings.browse.clone())
                             .disabled(self.picking)
                             .on_click(cx.listener(|this, _: &ClickEvent, window, cx| {
@@ -768,7 +772,7 @@ impl NewDownloadView {
         v_flex()
             .gap(tokens.spacing.xs)
             .child(self.label(self.strings.rename.clone(), cx))
-            .child(Input::new(&self.rename).w_full())
+            .child(Input::new(&self.rename).with_size(Size::Medium).w_full())
     }
 
     fn render_switch_row(
@@ -815,13 +819,15 @@ impl NewDownloadView {
                         div()
                             .flex_1()
                             .min_w_0()
-                            .child(Input::new(&self.http_user).w_full()),
+                            .child(Input::new(&self.http_user).with_size(Size::Medium).w_full()),
                     )
                     .child(
-                        div()
-                            .flex_1()
-                            .min_w_0()
-                            .child(Input::new(&self.http_password).mask_toggle().w_full()),
+                        div().flex_1().min_w_0().child(
+                            Input::new(&self.http_password)
+                                .with_size(Size::Medium)
+                                .mask_toggle()
+                                .w_full(),
+                        ),
                     ),
             )
             .child(self.render_switch_row(
@@ -874,7 +880,11 @@ impl NewDownloadView {
                 cx,
             ));
         if self.proxy_choice == ProxyChoice::Custom {
-            column = column.child(Input::new(&self.custom_proxy).w_full());
+            column = column.child(
+                Input::new(&self.custom_proxy)
+                    .with_size(Size::Medium)
+                    .w_full(),
+            );
         }
         column
     }
@@ -901,10 +911,11 @@ impl NewDownloadView {
                         cx,
                     ))
                     .child(
-                        div()
-                            .flex_1()
-                            .min_w_0()
-                            .child(Input::new(&self.user_agent).w_full()),
+                        div().flex_1().min_w_0().child(
+                            Input::new(&self.user_agent)
+                                .with_size(Size::Medium)
+                                .w_full(),
+                        ),
                     ),
             )
     }
@@ -947,7 +958,7 @@ impl NewDownloadView {
                         div()
                             .flex_1()
                             .min_w_0()
-                            .child(Input::new(&self.checksum).w_full()),
+                            .child(Input::new(&self.checksum).with_size(Size::Medium).w_full()),
                     ),
             )
     }
@@ -964,12 +975,16 @@ impl NewDownloadView {
                 h_flex()
                     .gap(tokens.spacing.sm)
                     .items_center()
-                    .child(div().w(px(160.)).child(Input::new(&row.key).w_full()))
+                    .child(
+                        div()
+                            .w(px(160.))
+                            .child(Input::new(&row.key).with_size(Size::Medium).w_full()),
+                    )
                     .child(
                         div()
                             .flex_1()
                             .min_w_0()
-                            .child(Input::new(&row.value).w_full()),
+                            .child(Input::new(&row.value).with_size(Size::Medium).w_full()),
                     )
                     .child(
                         Button::new(SharedString::from(format!(
@@ -992,6 +1007,7 @@ impl NewDownloadView {
                 Button::new("new-download-header-add")
                     .ghost()
                     .small()
+                    .h(CONTROL_HEIGHT)
                     .icon(IconName::Plus)
                     .label(self.strings.add_header.clone())
                     .on_click(cx.listener(|this, _: &ClickEvent, window, cx| {
@@ -1075,6 +1091,7 @@ impl NewDownloadView {
                 Button::new("new-download-cancel")
                     .outline()
                     .small()
+                    .h(CONTROL_HEIGHT)
                     .label(self.strings.cancel.clone())
                     .on_click(|_, window, _| window.remove_window()),
             )
@@ -1082,6 +1099,7 @@ impl NewDownloadView {
                 DropdownButton::new("new-download-later")
                     .outline()
                     .small()
+                    .h(CONTROL_HEIGHT)
                     .disabled(!enabled)
                     .button(
                         Button::new("new-download-later-main")
@@ -1097,6 +1115,7 @@ impl NewDownloadView {
                 DropdownButton::new("new-download-start")
                     .primary()
                     .small()
+                    .h(CONTROL_HEIGHT)
                     .disabled(!enabled)
                     .button(
                         Button::new("new-download-start-main")
@@ -1116,6 +1135,8 @@ impl Render for NewDownloadView {
         let tokens = active_theme(cx).tokens().clone();
         v_flex()
             .size_full()
+            // 表单区用 surface（白），与设置窗口内容区一致。
+            .bg(tokens.colors.surface)
             .child(self.render_header(cx))
             .child(
                 div()

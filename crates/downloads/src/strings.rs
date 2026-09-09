@@ -99,6 +99,8 @@ pub(crate) struct DownloadStrings {
     pub(crate) rss_refresh_action: SharedString,
     pub(crate) rss_manage_action: SharedString,
     pub(crate) tab_failed: SharedString,
+    pub(crate) empty_title: SharedString,
+    pub(crate) empty_subtitle: SharedString,
 }
 
 impl DownloadStrings {
@@ -121,6 +123,8 @@ impl DownloadStrings {
             col_source: shared(translator.text("colSource")),
             col_speed: shared(translator.text(keys::COL_SPEED)),
             confirm: shared(translator.text("confirm")),
+            empty_title: shared(translator.text("emptyTitle")),
+            empty_subtitle: shared(translator.text("emptySubtitle")),
             cancel: shared(translator.text("cancel")),
             disconnected: shared(translator.text("localServiceDisconnected")),
             action_failed: shared(translator.text("localServiceActionFailed")),
@@ -312,7 +316,6 @@ impl DownloadStrings {
 /// 「新建下载」表单文案，键集与 `lib/src/widgets/new_download_dialog.dart` 一致。
 #[derive(Clone)]
 pub(crate) struct NewDownloadStrings {
-    pub(crate) title: SharedString,
     pub(crate) subtitle: SharedString,
     pub(crate) url_label: SharedString,
     pub(crate) url_placeholder: SharedString,
@@ -381,7 +384,6 @@ pub(crate) struct NewDownloadStrings {
 impl NewDownloadStrings {
     pub(crate) fn from_translator(translator: &Translator) -> Self {
         Self {
-            title: shared(translator.text(keys::NEW_DOWNLOAD)),
             subtitle: shared(translator.text("batchDownloadDesc")),
             url_label: shared(translator.text("downloadUrl")),
             url_placeholder: shared(translator.text("batchUrlPlaceholder")),

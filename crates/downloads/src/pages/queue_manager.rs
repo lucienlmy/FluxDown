@@ -6,14 +6,14 @@ use fluxdown_protocol::{
     AgentEvent, AgentSnapshot, DaemonEvent, LATER_QUEUE_ID, MAIN_QUEUE_ID, QueueDto, ServiceEvent,
 };
 use fluxdown_ui_i18n::Translator;
-use fluxdown_ui_theme::active_theme;
+use fluxdown_ui_theme::{CONTROL_HEIGHT, active_theme};
 use gpui::{
     App, AppContext as _, ClickEvent, Context, Entity, InteractiveElement as _, IntoElement,
     ParentElement, Render, SharedString, StatefulInteractiveElement as _, Styled, Window, div,
     prelude::FluentBuilder as _, px,
 };
 use gpui_component::{
-    ActiveTheme as _, Disableable as _, Sizable as _, WindowExt as _,
+    ActiveTheme as _, Disableable as _, Sizable as _, Size, WindowExt as _,
     button::{Button, ButtonVariant, ButtonVariants as _},
     checkbox::Checkbox,
     dialog::DialogButtonProps,
@@ -426,8 +426,8 @@ impl QueueManagerView {
                     .child(
                         Button::new("queue-manager-new")
                             .ghost()
-                            .xsmall()
-                            .compact()
+                            .small()
+                            .h(CONTROL_HEIGHT)
                             .label(self.t("createQueueAction", cx))
                             .on_click(cx.listener(|this, _: &ClickEvent, window, cx| {
                                 this.new_queue(window, cx);
@@ -485,7 +485,7 @@ impl QueueManagerView {
                     .text_color(tokens.colors.muted_foreground)
                     .child(self.t(label_key, cx)),
             )
-            .child(Input::new(input).w_full())
+            .child(Input::new(input).with_size(Size::Medium).w_full())
     }
 
     fn render_save_dir_field(&self, cx: &mut Context<Self>) -> impl IntoElement + use<> {
@@ -512,11 +512,13 @@ impl QueueManagerView {
                             div()
                                 .flex_1()
                                 .min_w_0()
-                                .child(Input::new(&form.save_dir).w_full()),
+                                .child(Input::new(&form.save_dir).with_size(Size::Medium).w_full()),
                         )
                         .child(
                             Button::new("queue-manager-browse-dir")
                                 .secondary()
+                                .small()
+                                .h(CONTROL_HEIGHT)
                                 .label(self.t("browse", cx))
                                 .disabled(picking)
                                 .on_click(cx.listener(|this, _: &ClickEvent, window, cx| {
@@ -625,7 +627,7 @@ impl QueueManagerView {
                         .text_color(tokens.colors.muted_foreground)
                         .child(self.t(label_key, cx)),
                 )
-                .child(Input::new(input).w(px(120.))),
+                .child(Input::new(input).with_size(Size::Medium).w(px(120.))),
         )
     }
 
@@ -673,6 +675,8 @@ impl QueueManagerView {
             footer = footer.child(
                 Button::new("queue-manager-delete")
                     .danger()
+                    .small()
+                    .h(CONTROL_HEIGHT)
                     .label(self.t("deleteQueueAction", cx))
                     .on_click(cx.listener(|this, _: &ClickEvent, window, cx| {
                         this.confirm_delete(window, cx);
@@ -683,6 +687,8 @@ impl QueueManagerView {
             footer = footer.child(
                 Button::new("queue-manager-toggle-run")
                     .secondary()
+                    .small()
+                    .h(CONTROL_HEIGHT)
                     .label(if is_running {
                         self.t("stopQueueAction", cx)
                     } else {
@@ -696,6 +702,8 @@ impl QueueManagerView {
         footer = footer.child(div().flex_1()).child(
             Button::new("queue-manager-save")
                 .primary()
+                .small()
+                .h(CONTROL_HEIGHT)
                 .label(self.t("queueSaveAction", cx))
                 .on_click(cx.listener(|this, _: &ClickEvent, window, cx| {
                     this.save(window, cx);

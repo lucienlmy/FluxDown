@@ -4,9 +4,9 @@ use std::{
 };
 
 use fluxdown_ui_components::toolbar_action_button;
-use fluxdown_ui_theme::active_theme;
+use fluxdown_ui_theme::{CONTROL_HEIGHT, active_theme};
 use gpui::{
-    AnyElement, App, AppContext as _, ClickEvent, Context, Div, FocusHandle,
+    AnyElement, App, AppContext as _, ClickEvent, Context, Div, FocusHandle, FontWeight,
     InteractiveElement as _, IntoElement, Modifiers, MouseButton, ParentElement, Render,
     SharedString, Stateful, StatefulInteractiveElement as _, Styled, WeakEntity, Window, div,
     prelude::FluentBuilder as _, px, relative,
@@ -1476,6 +1476,39 @@ impl TableDelegate for DownloadTableDelegate {
         self.visible.len()
     }
 
+    /// 空态：图标 + 标题 + 引导（与 Flutter 桌面端同文案）。
+    fn render_empty(
+        &mut self,
+        _window: &mut Window,
+        cx: &mut Context<TableState<Self>>,
+    ) -> impl IntoElement {
+        let tokens = active_theme(cx).tokens().clone();
+        let colors = tokens.colors;
+        v_flex()
+            .size_full()
+            .items_center()
+            .justify_center()
+            .gap(px(10.))
+            .child(
+                Icon::new(IconName::Inbox)
+                    .size(px(44.))
+                    .text_color(colors.muted_foreground.opacity(0.35)),
+            )
+            .child(
+                div()
+                    .text_size(px(13.5))
+                    .font_weight(FontWeight::MEDIUM)
+                    .text_color(colors.muted_foreground)
+                    .child(self.strings.empty_title.clone()),
+            )
+            .child(
+                div()
+                    .text_size(px(12.))
+                    .text_color(colors.muted_foreground.opacity(0.75))
+                    .child(self.strings.empty_subtitle.clone()),
+            )
+    }
+
     fn column(&self, col_ix: usize, _cx: &App) -> Column {
         if col_ix == 0 {
             return Column::new("selection", "")
@@ -1550,8 +1583,10 @@ impl TableDelegate for DownloadTableDelegate {
             .items_center()
             .relative()
             .top(px(1.))
-            .text_size(tokens.typography.sm.size)
-            .font_weight(tokens.typography.sm.weight)
+            // 表头比正文小半档并加中等字重：与 Flutter 桌面端表头层级一致。
+            .text_size(px(12.5))
+            .font_weight(gpui::FontWeight::MEDIUM)
+            .text_color(tokens.colors.muted_foreground)
             .child(label)
     }
 
@@ -2025,6 +2060,8 @@ impl DownloadView {
                 Button::new("download-create")
                     .primary()
                     .small()
+                    .h(CONTROL_HEIGHT)
+                    .icon(IconName::Plus)
                     .label(self.strings.new_download.clone())
                     .on_click(cx.listener(|this, _, window, cx| {
                         this.open_new_download(window, cx);

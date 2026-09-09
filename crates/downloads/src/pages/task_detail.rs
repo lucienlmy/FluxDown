@@ -10,14 +10,14 @@ use std::{collections::VecDeque, rc::Rc, sync::Arc, time::Duration, time::Instan
 use chrono::{DateTime, Local};
 use fluxdown_protocol::{AgentEvent, AgentSnapshot, DaemonEvent, ServiceEvent, TaskDto};
 use fluxdown_ui_i18n::Translator;
-use fluxdown_ui_theme::active_theme;
+use fluxdown_ui_theme::{CONTROL_HEIGHT, active_theme};
 use gpui::{
     App, AppContext as _, ClipboardItem, Context, Entity, EventEmitter, InteractiveElement as _,
     IntoElement, ParentElement, SharedString, StatefulInteractiveElement as _, Styled, Window, div,
     prelude::FluentBuilder as _, px, relative,
 };
 use gpui_component::{
-    ActiveTheme as _, IconName, Sizable as _,
+    ActiveTheme as _, IconName, Sizable as _, Size,
     button::{Button, ButtonVariants as _},
     chart::AreaChart,
     h_flex,
@@ -895,7 +895,8 @@ impl TaskDetailView {
                         Button::new("detail-open-group")
                             .ghost()
                             .compact()
-                            .xsmall()
+                            .small()
+                            .h(CONTROL_HEIGHT)
                             .label(self.strings.open_group_in_window.clone())
                             .on_click(cx.listener(move |this, _, window, cx| {
                                 this.open_group(group_id.clone(), window, cx);
@@ -908,6 +909,7 @@ impl TaskDetailView {
                 Button::new("detail-copy-link")
                     .ghost()
                     .small()
+                    .h(CONTROL_HEIGHT)
                     .icon(IconName::Copy)
                     .label(self.strings.copy_url.clone())
                     .on_click(cx.listener(|this, _, _, cx| this.copy_link(cx))),
@@ -1000,6 +1002,7 @@ impl TaskDetailView {
                 Button::new("detail-save-seed-limits")
                     .primary()
                     .small()
+                    .h(CONTROL_HEIGHT)
                     .label(self.strings.confirm.clone())
                     .on_click(cx.listener(|this, _, _, cx| this.save_seed_limits(cx))),
             )
@@ -1030,7 +1033,7 @@ impl TaskDetailView {
                 div()
                     .flex_none()
                     .w(px(120.))
-                    .child(NumberInput::new(&state)),
+                    .child(NumberInput::new(&state).with_size(Size::Medium)),
             )
     }
 

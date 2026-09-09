@@ -18,14 +18,14 @@ use fluxdown_protocol::{
     MAIN_QUEUE_ID, PendingCaptureDto, ServiceEvent,
 };
 use fluxdown_ui_i18n::Translator;
-use fluxdown_ui_theme::active_theme;
+use fluxdown_ui_theme::{CONTROL_HEIGHT, active_theme};
 use gpui::{
     Anchor, App, AppContext as _, ClickEvent, Context, Div, Entity, EventEmitter,
     InteractiveElement as _, IntoElement, KeyBinding, ParentElement, Render, SharedString,
     StatefulInteractiveElement as _, Styled, Window, actions, div, prelude::FluentBuilder as _, px,
 };
 use gpui_component::{
-    Disableable as _, Icon, IconName, Sizable as _, StyledExt as _, WindowExt as _,
+    Disableable as _, Icon, IconName, Sizable as _, Size, StyledExt as _, WindowExt as _,
     button::{Button, ButtonVariants as _},
     h_flex,
     input::{Input, InputState},
@@ -375,7 +375,7 @@ impl QuickCaptureView {
                         div()
                             .flex_1()
                             .min_w_0()
-                            .child(Input::new(&self.save_dir).small()),
+                            .child(Input::new(&self.save_dir).with_size(Size::Medium)),
                     )
                     .child(
                         Button::new("quick-capture-browse")
@@ -398,6 +398,7 @@ impl QuickCaptureView {
         Button::new("quick-capture-queue")
             .ghost()
             .small()
+            .h(CONTROL_HEIGHT)
             .icon(IconName::LayoutDashboard)
             .label(current_label)
             .dropdown_caret(true)
@@ -448,7 +449,7 @@ impl QuickCaptureView {
                         div()
                             .flex_1()
                             .min_w_0()
-                            .child(Input::new(&row.file_name).small()),
+                            .child(Input::new(&row.file_name).with_size(Size::Medium)),
                     )
                     .child(
                         div()
@@ -483,6 +484,7 @@ impl QuickCaptureView {
                         Button::new(format!("quick-capture-ignore-{}", row.dto.transaction_id))
                             .ghost()
                             .small()
+                            .h(CONTROL_HEIGHT)
                             .label(self.strings.ignore.clone())
                             .on_click(cx.listener(move |this, _: &ClickEvent, window, cx| {
                                 this.resolve(transaction_id_for_ignore.clone(), false, window, cx);
@@ -492,6 +494,7 @@ impl QuickCaptureView {
                         Button::new(format!("quick-capture-download-{}", row.dto.transaction_id))
                             .primary()
                             .small()
+                            .h(CONTROL_HEIGHT)
                             .label(self.strings.download.clone())
                             .on_click(cx.listener(move |this, _: &ClickEvent, window, cx| {
                                 this.resolve(transaction_id.clone(), true, window, cx);
@@ -511,6 +514,7 @@ impl QuickCaptureView {
                 Button::new("quick-capture-more")
                     .link()
                     .small()
+                    .h(CONTROL_HEIGHT)
                     .label(self.strings.more_options.clone())
                     .on_click(cx.listener(|this, _: &ClickEvent, window, cx| {
                         this.open_more_options(window, cx);
@@ -524,6 +528,7 @@ impl QuickCaptureView {
                             Button::new("quick-capture-ignore-all")
                                 .outline()
                                 .small()
+                                .h(CONTROL_HEIGHT)
                                 .label(self.strings.ignore_all.clone())
                                 .on_click(cx.listener(|this, _: &ClickEvent, window, cx| {
                                     this.resolve_all(false, window, cx);
@@ -533,6 +538,7 @@ impl QuickCaptureView {
                             Button::new("quick-capture-download-all")
                                 .primary()
                                 .small()
+                                .h(CONTROL_HEIGHT)
                                 .label(self.strings.download_all.clone())
                                 .on_click(cx.listener(|this, _: &ClickEvent, window, cx| {
                                     this.resolve_all(true, window, cx);

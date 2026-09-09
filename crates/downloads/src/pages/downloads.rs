@@ -37,7 +37,7 @@ use gpui::{
     Styled, Window, div, prelude::FluentBuilder as _, px,
 };
 use gpui_component::{
-    Icon, IconName, ResizableState, Sizable as _, WindowExt as _,
+    Icon, IconName, ResizableState, Sizable as _, Size, WindowExt as _,
     button::{Button, ButtonVariants as _},
     h_flex, h_resizable,
     input::{Input, InputEvent, InputState},
@@ -106,6 +106,8 @@ pub struct DownloadView {
     pub(crate) focus_handle: FocusHandle,
     /// 工具栏搜索框状态。
     pub(crate) search_input: Entity<InputState>,
+    /// 已下发给搜索框的 placeholder（语言切换后需重下发）。
+    search_placeholder: SharedString,
     /// 搜索防抖代数。
     search_generation: Rc<Cell<u64>>,
     prefs_generation: Rc<Cell<u64>>,
@@ -145,6 +147,7 @@ impl DownloadView {
                 .delegate_mut()
                 .set_action_context(focus_handle.clone());
         });
+        let strings_placeholder = strings.search_tasks_placeholder.clone();
         let search_input = cx.new(|cx| {
             InputState::new(window, cx).placeholder(strings.search_tasks_placeholder.clone())
         });
@@ -180,6 +183,7 @@ impl DownloadView {
             resizable_state_initialized: false,
             focus_handle,
             search_input,
+            search_placeholder: strings_placeholder,
             search_generation: Rc::new(Cell::new(0)),
             prefs_generation: Rc::new(Cell::new(0)),
             prefs_loaded: false,
@@ -754,7 +758,9 @@ impl DownloadView {
             let task_id = task_id.clone();
             dialog
                 .title(title.clone())
-                .content(move |content, _, _| content.child(Input::new(&content_input).w_full()))
+                .content(move |content, _, _| {
+                    content.child(Input::new(&content_input).with_size(Size::Medium).w_full())
+                })
                 .button_props(
                     gpui_component::dialog::DialogButtonProps::default()
                         .ok_text(ok_label.clone())
@@ -1337,7 +1343,7 @@ impl DownloadView {
                 .on_action(cx.listener(Self::on_search_escape))
                 .child(
                     Input::new(&self.search_input)
-                        .small()
+                        .with_size(Size::Medium)
                         .cleanable(true)
                         .prefix(
                             Icon::new(IconName::Search)
@@ -1527,6 +1533,14 @@ impl Render for DownloadView {
             self.resizable_state
                 .update(cx, |state, cx| state.reset_panel(1, cx));
             self.resizable_state_initialized = true;
+        }
+        // 语言切换后同步搜索框 placeholder（InputState 只在构造时取一次）。
+        if self.search_placeholder != self.strings.search_tasks_placeholder {
+            self.search_placeholder = self.strings.search_tasks_placeholder.clone();
+            let placeholder = self.search_placeholder.clone();
+            self.search_input.update(cx, |input, cx| {
+                input.set_placeholder(placeholder, window, cx);
+            });
         }
         let sidebar_width = self.table_state.read(cx).delegate().prefs().sidebar_width;
         let available_width = sizes.get(1).map_or_else(

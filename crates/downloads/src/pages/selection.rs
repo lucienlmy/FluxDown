@@ -13,14 +13,14 @@ use fluxdown_protocol::{
     SelectionRequestDto, SelectionResolutionDto,
 };
 use fluxdown_ui_i18n::Translator;
-use fluxdown_ui_theme::active_theme;
+use fluxdown_ui_theme::{CONTROL_HEIGHT, active_theme};
 use gpui::{
     ClickEvent, Context, Div, Entity, InteractiveElement as _, IntoElement, ParentElement, Render,
     SharedString, StatefulInteractiveElement as _, Styled, Window, div,
     prelude::FluentBuilder as _, px,
 };
 use gpui_component::{
-    Disableable as _, StyledExt as _, WindowExt as _,
+    Disableable as _, Sizable as _, StyledExt as _, WindowExt as _,
     button::{Button, ButtonVariants as _},
     checkbox::Checkbox,
     h_flex,
@@ -323,6 +323,8 @@ impl SelectionView {
             .child(
                 Button::new("bt-select-all")
                     .outline()
+                    .small()
+                    .h(CONTROL_HEIGHT)
                     .label(self.strings.select_all.clone())
                     .on_click(cx.listener(|this, _: &ClickEvent, _, cx| {
                         if let SelectionState::Bt { files, selected } = &mut this.state {
@@ -334,6 +336,8 @@ impl SelectionView {
             .child(
                 Button::new("bt-deselect-all")
                     .outline()
+                    .small()
+                    .h(CONTROL_HEIGHT)
                     .label(self.strings.deselect_all.clone())
                     .on_click(cx.listener(|this, _: &ClickEvent, _, cx| {
                         if let SelectionState::Bt { selected, .. } = &mut this.state {
@@ -449,6 +453,8 @@ impl SelectionView {
                         row.child(
                             Button::new("selection-cancel")
                                 .outline()
+                                .small()
+                                .h(CONTROL_HEIGHT)
                                 .label(self.strings.cancel.clone())
                                 .disabled(self.submitting)
                                 .on_click(cx.listener(|this, _: &ClickEvent, window, cx| {
@@ -459,6 +465,8 @@ impl SelectionView {
                     .child(
                         Button::new("selection-confirm")
                             .primary()
+                            .small()
+                            .h(CONTROL_HEIGHT)
                             .label(confirm_label)
                             .disabled(self.submitting)
                             .on_click(cx.listener(|this, _: &ClickEvent, window, cx| {
