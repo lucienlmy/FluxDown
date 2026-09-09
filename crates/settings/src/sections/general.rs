@@ -35,45 +35,43 @@ fn startup_group(ctx: &SectionContext, cx: &mut App) -> SettingGroup {
             )
             .disabled(!integration_supported(ctx, IntegrationKind::Autostart, cx)),
         )
-        .item(ctx.item(
-            "closeToTray",
-            Some("closeToTrayDesc"),
-            ctx.pref_switch("close_to_tray", true),
-        ))
-        .item(ctx.item(
-            "startMinimizedToTray",
-            Some("startMinimizedToTrayDesc"),
-            ctx.pref_switch("start_minimized_to_tray", false),
-        ))
+        .item(
+            ctx.item(
+                "closeToTray",
+                Some(tray_desc("closeToTrayDesc")),
+                ctx.pref_switch("close_to_tray", true),
+            )
+            .disabled(!TRAY_SUPPORTED),
+        )
+        .item(
+            ctx.item(
+                "startMinimizedToTray",
+                Some(tray_desc("startMinimizedToTrayDesc")),
+                ctx.pref_switch("start_minimized_to_tray", false),
+            )
+            .disabled(!TRAY_SUPPORTED),
+        )
+}
+
+/// 托盘仅 Windows / macOS 提供（GPUI 端 Linux 不做托盘，关窗即退出）。
+const TRAY_SUPPORTED: bool = cfg!(any(windows, target_os = "macos"));
+
+fn tray_desc(key: &'static str) -> &'static str {
+    if TRAY_SUPPORTED {
+        key
+    } else {
+        "trayUnsupportedLinux"
+    }
 }
 
 fn system_group(ctx: &SectionContext, cx: &mut App) -> SettingGroup {
-    let floating_ball = ctx
-        .store
-        .read(cx)
-        .pref_bool("general.floating_ball_enabled", false);
-    let mut group = SettingGroup::new()
+    SettingGroup::new()
         .title(ctx.t("settingsGroupSystem"))
         .item(ctx.item(
-            "floatingBall",
-            Some("floatingBallDesc"),
-            ctx.pref_switch("general.floating_ball_enabled", false),
-        ));
-    if floating_ball {
-        group = group.item(ctx.item(
-            "floatingBallActiveOnly",
-            Some("floatingBallActiveOnlyDesc"),
-            ctx.pref_switch("general.floating_ball_active_only", false),
-        ));
-    }
-    if cfg!(target_os = "linux") {
-        group = group.item(ctx.item(
             "clipboardWatch",
             Some("clipboardWatchDesc"),
             ctx.pref_switch("general.clipboard_watch", false),
-        ));
-    }
-    group
+        ))
         .item(
             ctx.item(
                 "torrentFileAssociation",

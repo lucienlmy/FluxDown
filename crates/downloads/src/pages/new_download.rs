@@ -53,6 +53,10 @@ pub struct NewDownloadContext {
     pub queues: Vec<NewDownloadQueue>,
     /// 全局手动代理 URL；空 = 未配置（对应下拉项置灰）。
     pub manual_proxy_url: String,
+    /// 预填链接（拖放 / 捕获「更多选项」）。
+    pub initial_urls: Vec<String>,
+    /// 预填文件名（仅单链接时有意义）。
+    pub initial_file_name: String,
 }
 
 /// 表单确认后的提交内容。
@@ -114,8 +118,11 @@ impl NewDownloadView {
         cx: &mut Context<Self>,
     ) -> Self {
         let strings = NewDownloadStrings::from_translator(translator.read(cx));
-        let urls = cx
-            .new(|cx| TextareaState::new(window, cx).placeholder(strings.url_placeholder.clone()));
+        let urls = cx.new(|cx| {
+            TextareaState::new(window, cx)
+                .default_value(context.initial_urls.join("\n"))
+                .placeholder(strings.url_placeholder.clone())
+        });
         let save_dir = cx.new(|cx| {
             InputState::new(window, cx)
                 .default_value(context.save_dir.clone())
@@ -139,11 +146,16 @@ impl NewDownloadView {
         let cookie = cx.new(|cx| {
             TextareaState::new(window, cx).placeholder(strings.cookie_placeholder.clone())
         });
+        let rename = cx.new(|cx| {
+            InputState::new(window, cx)
+                .default_value(context.initial_file_name.clone())
+                .placeholder(strings.rename_placeholder.clone())
+        });
         urls.update(cx, |input, cx| input.focus(window, cx));
 
-        let this = Self {
+        let mut this = Self {
             threads: ThreadChoice::from_segments(context.segments),
-            rename: Self::input(strings.rename_placeholder.clone(), window, cx),
+            rename,
             http_user: Self::input(strings.http_auth_user.clone(), window, cx),
             custom_proxy: Self::input(strings.proxy_placeholder.clone(), window, cx),
             user_agent: Self::input(strings.user_agent_desc.clone(), window, cx),
@@ -167,6 +179,7 @@ impl NewDownloadView {
             header_seq: 0,
             picking: false,
         };
+        this.refresh_entries(cx);
         this.subscribe_inputs(&translator, window, cx);
         this
     }

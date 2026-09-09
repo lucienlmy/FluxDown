@@ -9,125 +9,17 @@ use gpui_component::{
     setting::{SettingGroup, SettingItem},
     v_flex,
 };
-use serde::{Deserialize, Serialize};
 
 use super::{SectionContext, category_dialog};
 use crate::store::SettingsStore;
 
-pub(crate) const CATEGORIES_KEY: &str = "custom_categories";
-
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub(crate) struct CategoryEntry {
-    pub id: String,
-    pub name: String,
-    #[serde(default = "default_icon")]
-    pub icon: String,
-    #[serde(default = "default_match_mode")]
-    pub match_mode: String,
-    #[serde(default)]
-    pub extensions: Vec<String>,
-    #[serde(default)]
-    pub regex_pattern: String,
-    #[serde(default)]
-    pub position: i64,
-    #[serde(default = "default_true")]
-    pub visible: bool,
-    #[serde(default)]
-    pub is_builtin: bool,
-    #[serde(default)]
-    pub builtin_type: Option<String>,
-    #[serde(default)]
-    pub save_dir: String,
-}
-
-fn default_icon() -> String {
-    "file".to_owned()
-}
-fn default_match_mode() -> String {
-    "extension".to_owned()
-}
-fn default_true() -> bool {
-    true
-}
-
-/// 内置分类基线（与 Flutter `CustomCategory.builtinDefaults` 同序同扩展名）。
-pub(crate) fn builtin_defaults() -> Vec<CategoryEntry> {
-    let make = |id: &str, icon: &str, exts: &[&str], position: i64| CategoryEntry {
-        id: format!("builtin_{id}"),
-        name: String::new(),
-        icon: icon.to_owned(),
-        match_mode: "extension".to_owned(),
-        extensions: exts.iter().map(|ext| (*ext).to_owned()).collect(),
-        regex_pattern: String::new(),
-        position,
-        visible: true,
-        is_builtin: true,
-        builtin_type: Some(id.to_owned()),
-        save_dir: String::new(),
-    };
-    vec![
-        make("all", "folders", &[], 0),
-        make(
-            "video",
-            "film",
-            &[
-                "mp4", "mkv", "avi", "mov", "wmv", "flv", "webm", "m4v", "ts", "m3u8",
-            ],
-            1,
-        ),
-        make(
-            "audio",
-            "music",
-            &["mp3", "flac", "wav", "aac", "ogg", "m4a", "wma", "opus"],
-            2,
-        ),
-        make(
-            "document",
-            "fileText",
-            &[
-                "pdf", "doc", "docx", "xls", "xlsx", "ppt", "pptx", "txt", "epub", "md",
-            ],
-            3,
-        ),
-        make(
-            "image",
-            "image",
-            &[
-                "jpg", "jpeg", "png", "gif", "webp", "bmp", "svg", "heic", "avif",
-            ],
-            4,
-        ),
-        make(
-            "program",
-            "cpu",
-            &["exe", "msi", "dmg", "pkg", "deb", "rpm", "apk", "appimage"],
-            5,
-        ),
-        make(
-            "archive",
-            "archive",
-            &["zip", "rar", "7z", "tar", "gz", "bz2", "xz", "iso"],
-            6,
-        ),
-        make("other", "file", &[], 7),
-    ]
-}
+pub(crate) use fluxdown_protocol::CUSTOM_CATEGORIES_PREF_KEY as CATEGORIES_KEY;
+/// 分类模型：wire 形状归 protocol，设置页只读写偏好。
+pub(crate) type CategoryEntry = fluxdown_protocol::CustomCategoryDto;
 
 /// 读取分类列表；未设置或损坏时回退内置基线。
 pub(crate) fn read_categories(store: &SettingsStore) -> Vec<CategoryEntry> {
-    let parsed = match store.pref(CATEGORIES_KEY) {
-        Some(serde_json::Value::String(text)) => {
-            serde_json::from_str::<Vec<CategoryEntry>>(text).ok()
-        }
-        Some(value) => serde_json::from_value::<Vec<CategoryEntry>>(value.clone()).ok(),
-        None => None,
-    };
-    let mut list = parsed
-        .filter(|list| !list.is_empty())
-        .unwrap_or_else(builtin_defaults);
-    list.sort_by_key(|entry| entry.position);
-    list
+    CategoryEntry::from_preference(store.pref(CATEGORIES_KEY))
 }
 
 pub(crate) fn write_categories(
@@ -373,7 +265,7 @@ fn list_item(ctx: &SectionContext) -> SettingItem {
                         .disabled(disabled)
                         .on_click(move |_, _, cx| {
                             reset_store.update(cx, |store, cx| {
-                                write_categories(store, builtin_defaults(), cx);
+                                write_categories(store, CategoryEntry::builtin_defaults(), cx);
                             });
                         }),
                     ),
